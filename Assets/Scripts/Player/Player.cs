@@ -10,13 +10,15 @@ using UnityEngine.Events;
 public class Player : MonoBehaviour
 {
     [SerializeField] private float _maxEnergy = 100;
-    [SerializeField] private float _energy;
+    [SerializeField] private float _currentEnergy;
     [SerializeField] private float _energyWastePerSecond = 2;
 
     private Rigidbody2D _rigidBody;
     private Health _health;
     private PlayerCombat _combat;
     private PlayerMover _mover;
+
+    public float CurrentEnergy => _currentEnergy;
 
     public event UnityAction<float> HealthChanged;
     public event UnityAction<float> EnergyChanged;
@@ -40,7 +42,7 @@ public class Player : MonoBehaviour
         _rigidBody = GetComponent<Rigidbody2D>();
         _rigidBody.gravityScale = 0;
 
-        _energy = _maxEnergy;
+        _currentEnergy = _maxEnergy;
         _health = GetComponent<Health>();
     }
 
@@ -48,30 +50,48 @@ public class Player : MonoBehaviour
     {
         if (collision.TryGetComponent(out Energy energy))
         {
-            _energy = Mathf.Clamp(_energy + energy.AmountOfRestoredEnergy, 0, _maxEnergy);
-
-            if (_energy > 0)
-                _rigidBody.gravityScale = 0;
-
-            EnergyChanged?.Invoke(_energy / _maxEnergy);
+            ChangeEnergy(energy.AmountOfRestoredEnergy);
             energy.gameObject.SetActive(false);
         }
+
+        if (collision.TryGetComponent(out Repair repair))
+        {
+            RestoreHelath(repair.AmountOfRestoredHealth);
+            repair.gameObject.SetActive(false);
+        }
+    }
+
+    public void ChangeEnergy(float amountOfRestoredEnergy)
+    {
+        _currentEnergy = Mathf.Clamp(_currentEnergy + amountOfRestoredEnergy, 0, _maxEnergy);
+
+        if (_currentEnergy > 0)
+            _rigidBody.gravityScale = 0;
+
+        EnergyChanged?.Invoke(_currentEnergy / _maxEnergy);
     }
 
     private void FixedUpdate()
     {
-        if (_energy <= 0)
+        if (_currentEnergy <= 0)
         {
             _rigidBody.gravityScale = GravityScale;
             return;
         }
 
-        _energy -= Time.fixedDeltaTime * _energyWastePerSecond;
-        EnergyChanged?.Invoke(_energy / _maxEnergy);
+        _currentEnergy -= Time.fixedDeltaTime * _energyWastePerSecond;
+        EnergyChanged?.Invoke(_currentEnergy / _maxEnergy);
     }
+
     public void ApplyDamage(float damage)
     {
         _health.ApplyDamage(damage);
+        HealthChanged?.Invoke(_health.Current / _health.Max);
+    }
+
+    public void RestoreHelath(float amountOfRestoredHP)
+    {
+        _health.RestoreHealth(amountOfRestoredHP);
         HealthChanged?.Invoke(_health.Current / _health.Max);
     }
 

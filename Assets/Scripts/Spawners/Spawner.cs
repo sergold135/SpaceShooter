@@ -10,8 +10,8 @@ public class Spawner : PoolObject
     [SerializeField] protected float MaxSecondsBetweenSpawn;
     [SerializeField] protected bool IsSpawningOnTimer;
 
-    private float _secondsBetweenSpawn;
-    private float _elapsedTime;
+    protected float _secondsBetweenSpawn;
+    protected float _elapsedTime;
 
     protected virtual void Start()
     {

@@ -9,6 +9,7 @@ public class Health : MonoBehaviour
     [SerializeField] private float _current;
     [SerializeField] private AudioClip _hit;
     [SerializeField] private AudioClip _death;
+    [SerializeField] private AudioClip _restoreHP;
 
     public float Max => _max;
     public float Current => _current;
@@ -37,4 +38,9 @@ public class Health : MonoBehaviour
         }
     }
 
+    public virtual void RestoreHealth(float amountOfRestoredHealth)
+    {
+        _current = Mathf.Clamp(_current + amountOfRestoredHealth, 0, _max);
+        AudioManager.Instance.PlayClip(_restoreHP);
+    }
 }
