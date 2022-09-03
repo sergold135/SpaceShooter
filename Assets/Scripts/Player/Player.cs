@@ -17,24 +17,34 @@ public class Player : MonoBehaviour
     private Health _health;
     private PlayerCombat _combat;
     private PlayerMover _mover;
+    private int _score;
+    private int _record;
 
     public float CurrentEnergy => _currentEnergy;
+    public float Score => _score;
 
     public event UnityAction<float> HealthChanged;
     public event UnityAction<float> EnergyChanged;
+    public event UnityAction<int> ScoreChanged;
     public event UnityAction Died;
 
     private const float GravityScale = 0.05f;
 
     private void OnEnable()
     {
+        _record = PlayerPrefs.GetInt("Record");
+
         _combat = GetComponent<PlayerCombat>();
         _mover = GetComponent<PlayerMover>();
         _health.Died += OnDied;
+
+        Astronaut.AstronautSaved += OnAstronautSaved; 
     }
     private void OnDisable()
     {
         _health.Died -= OnDied;
+
+        Astronaut.AstronautSaved -= OnAstronautSaved;
     }
 
     private void Awake()
@@ -58,6 +68,18 @@ public class Player : MonoBehaviour
         {
             RestoreHelath(repair.AmountOfRestoredHealth);
             repair.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnAstronautSaved()
+    {
+        _score++;
+        ScoreChanged?.Invoke(_score);
+
+        if (_score > _record)
+        {
+            _record = _score;
+            PlayerPrefs.SetInt("Record", _record);
         }
     }
 
